@@ -29,7 +29,7 @@ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób
 %build
 LDFLAGS="-s"; export LDFLAGS
 %configure 
-make
+%{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
