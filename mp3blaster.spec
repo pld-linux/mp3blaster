@@ -1,7 +1,7 @@
 Summary:	ncurses-based based mp3 player
 Summary(pl):	Odtwarzacz plików mp3 bazowany na ncurses
 Name:		mp3blaster
-Version:	2.0b18
+Version:	3.0p7
 Release:	1
 License:	GPL
 Group:		Applications/Sound
@@ -26,7 +26,7 @@ kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób
 
 %prep
 %setup -q
-%patch0 -p1
+#%patch0 -p1
 
 %build
 %configure 
@@ -37,13 +37,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} install DESTDIR=$RPM_BUILD_ROOT
 
-gzip -9nf AUTHORS CREDITS ChangeLog NEWS README TODO sample.mp3blasterrc
+gzip -9nf AUTHORS CREDITS ChangeLog NEWS README TODO BUGS COPYING FAQ
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc *.gz
+%doc *.gz 
 %attr(755,root,root) %{_bindir}/*
+/usr/share/mp3blaster/*
 %{_mandir}/man1/*
