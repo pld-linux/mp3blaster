@@ -9,7 +9,7 @@ Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
-BuildRequires:	libvorbis-devel
+BuildRequires:	libvorbis-devel >= 1:1.0
 BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
