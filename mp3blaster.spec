@@ -10,7 +10,6 @@ URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libvorbis-devel
-BuildRequires:	nas-devel
 BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -35,8 +34,7 @@ aclocal
 %{__autoconf}
 %{__automake}
 %configure \
-	--with-oggvorbis \
-	--with-nas 
+	--with-oggvorbis 
 %{__make}
 
 %install
