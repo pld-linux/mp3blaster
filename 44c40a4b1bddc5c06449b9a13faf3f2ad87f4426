@@ -1,0 +1,4 @@
+- new version
+- updated source url
+- patch for changing CWD (without it one can't umount any filesystem,
+  though program's not using it anymore)
