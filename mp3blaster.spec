@@ -26,7 +26,7 @@ groups (albums). Therefore, the play order can be adjusted with great
 flexibility.
 
 %description -l pl
-mp3blaster to interaktywy odtwarzacz plików mp3 pracuj±cy w trybie
+mp3blaster to interaktywny odtwarzacz plików mp3 pracuj±cy w trybie
 tekstowym. Jedn± z wyj±tkowych cech tego odtwarzacza jest mo¿liwo¶æ
 dzielenia list odtwarzanych plików na grupy (albumy). Dziêki temu
 kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
