@@ -11,13 +11,13 @@ License:	GPL
 Group:		Applications/Sound
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 # Source0-md5:	38beb6a5648cbca4ec87ee14b0982283
-Patch0:     http://linux.slupsk.net/patches/%{name}-lirc.patch
+Patch0:		http://linux.slupsk.net/patches/%{name}-lirc.patch
 URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libvorbis-devel >= 1:1.0
 BuildRequires:	ncurses-devel >= 5.2
-%{?_with_lirc:BuildRequires:     lirc-devel}
+%{?_with_lirc:BuildRequires:	lirc-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -42,8 +42,8 @@ rm -f missing
 %{__autoconf}
 %{__automake}
 %configure \
-       %{?_with_lirc: --with-lirc} \
-	   --with-oggvorbis 
+	%{?_with_lirc:--with-lirc} \
+	--with-oggvorbis
 %{__make}
 
 %install
