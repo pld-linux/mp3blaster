@@ -2,8 +2,8 @@
 # Conditional build:
 %bcond_with	lirc	# with LIRC support.
 #
-Summary:	ncurses-based based mp3 player
-Summary(pl):	Odtwarzacz plików mp3 bazowany na ncurses
+Summary:	ncurses-based based MP3 player
+Summary(pl):	Odtwarzacz plików MP3 bazowany na ncurses
 Name:		mp3blaster
 Version:	3.2.0
 Release:	1
@@ -21,13 +21,13 @@ BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
-mp3blaster is an interactive text-based mp3player. One of the unique
+mp3blaster is an interactive text-based MP3 player. One of the unique
 features of this player is the ability to divide a playlist into
 groups (albums). Therefore, the play order can be adjusted with great
 flexibility.
 
 %description -l pl
-mp3blaster to interaktywny odtwarzacz plików mp3 pracuj±cy w trybie
+mp3blaster to interaktywny odtwarzacz plików MP3 pracuj±cy w trybie
 tekstowym. Jedn± z wyj±tkowych cech tego odtwarzacza jest mo¿liwo¶æ
 dzielenia list odtwarzanych plików na grupy (albumy). Dziêki temu
 kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
