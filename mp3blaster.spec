@@ -11,7 +11,6 @@ License:	GPL
 Group:		Applications/Sound
 Source0:	http://www.stack.nl/~brama/mp3blaster/src/%{name}-%{version}.tar.gz
 # Source0-md5:	d01a36de2ebb5b4f7c407ae6cc7668b1
-Patch0:		http://linux.slupsk.net/patches/%{name}-lirc.patch
 URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
