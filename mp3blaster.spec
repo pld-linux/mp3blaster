@@ -31,7 +31,7 @@ kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
 rm -f missing
 aclocal
 autoconf
-automake -a -c
+automake -a -c -f
 %configure
 %{__make}
 
@@ -40,7 +40,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} install DESTDIR=$RPM_BUILD_ROOT
 
-gzip -9nf AUTHORS CREDITS ChangeLog NEWS README TODO BUGS COPYING FAQ 
+gzip -9nf AUTHORS CREDITS ChangeLog NEWS README TODO BUGS FAQ 
 
 %clean
 rm -rf $RPM_BUILD_ROOT
