@@ -2,13 +2,15 @@ Summary:	ncurses-based based mp3 player
 Summary(pl):	Odtwarzacz plików mp3 bazowany na ncurses
 Name:		mp3blaster
 Version:	3.1.1
-Release:	1
+Release:	2
 License:	GPL
 Group:		Applications/Sound
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	libvorbis-devel
+BuildRequires:	nas-devel
 BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
@@ -32,7 +34,9 @@ rm -f missing
 aclocal
 %{__autoconf}
 %{__automake}
-%configure
+%configure \
+	--with-oggvorbis \
+	--with-nas 
 %{__make}
 
 %install
@@ -40,14 +44,12 @@ rm -rf $RPM_BUILD_ROOT
 
 %{__make} install DESTDIR=$RPM_BUILD_ROOT
 
-gzip -9nf AUTHORS CREDITS ChangeLog NEWS README TODO BUGS FAQ 
-
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc *.gz 
+%doc AUTHORS CREDITS ChangeLog NEWS README TODO BUGS FAQ
 %attr(755,root,root) %{_bindir}/*
 %{_datadir}/mp3blaster
 %{_mandir}/man1/*
