@@ -9,7 +9,7 @@ License:	GPL
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 Patch0:		mp3blaster-cwd.patch
 BuildRequires:	ncurses-devel >= 5.0
-Buildroot:	/tmp/%{name}-%{version}-root
+BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
 mp3blaster is an interactive text-based mp3player. One of the unique
