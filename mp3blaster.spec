@@ -2,7 +2,7 @@ Summary:	ncurses-based based mp3 player
 Summary(pl):	Odtwarzacz plików mp3 bazowany na ncurses
 Name:		mp3blaster
 Version:	2.0b17
-Release:	1
+Release:	2
 Group:		Applications/Sound
 Group(pl):	Aplikacje/D¼wiêk
 License:	GPL
