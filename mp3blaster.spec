@@ -8,8 +8,7 @@ Group:		Applications/Sound
 Group(de):	Applikationen/Laut
 Group(pl):	Aplikacje/D¼wiêk
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
-Patch0:		%{name}-cwd.patch
-BuildRequires:	ncurses-devel >= 5.0
+BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -26,7 +25,6 @@ kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób
 
 %prep
 %setup -q
-#%patch0 -p1
 
 %build
 %configure 
@@ -46,5 +44,5 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,755)
 %doc *.gz 
 %attr(755,root,root) %{_bindir}/*
-/usr/share/mp3blaster/*
+%{_datadir}/mp3blaster/*
 %{_mandir}/man1/*
