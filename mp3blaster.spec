@@ -1,7 +1,7 @@
-# Conditional build:
 #
-# _with_lirc    - with LIRC support.
-
+# Conditional build:
+%bcond_with	lirc	# with LIRC support.
+#
 Summary:	ncurses-based based mp3 player
 Summary(pl):	Odtwarzacz plików mp3 bazowany na ncurses
 Name:		mp3blaster
@@ -16,7 +16,7 @@ BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libvorbis-devel >= 1:1.0
 BuildRequires:	ncurses-devel >= 5.2
-%{?_with_lirc:BuildRequires:	lirc-devel}
+%{?with_lirc:BuildRequires:	lirc-devel}
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -41,7 +41,7 @@ rm -f missing
 %{__autoconf}
 %{__automake}
 %configure \
-	%{?_with_lirc:--with-lirc} \
+	%{?with_lirc:--with-lirc} \
 	--with-oggvorbis
 %{__make}
 
