@@ -9,6 +9,8 @@ Group(de):	Applikationen/Laut
 Group(pl):	Aplikacje/D¼wiêk
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 BuildRequires:	ncurses-devel >= 5.2
+BuildRequires:	autoconf
+BuildRequires:	automake
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
@@ -21,7 +23,7 @@ flexibility.
 mp3blaster to interaktywy odtwarzacz plików mp3 pracuj±cy w trybie
 tekstowym. Jedn± z wyj±tkowych cech tego odtwarzacza jest mo¿liwo¶æ
 dzielenia list odtwarzanych plików na grupy (albumy). Dziêki temu
-kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób
+kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
 
 %prep
 %setup -q
