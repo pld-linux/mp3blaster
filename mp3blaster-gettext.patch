@@ -1,0 +1,10 @@
+--- mp3blaster-3.1.3/src/main.cc~	2003-11-02 10:31:53.000000000 +0100
++++ mp3blaster-3.1.3/src/main.cc	2003-11-02 10:32:38.000000000 +0100
+@@ -141,7 +141,6 @@
+ void show_help();
+ void draw_static(int file_mode=0);
+ void draw_settings(int cleanit=0);
+-char *gettext(const char *label, short display_path=0);
+ void fw_getpath(char *, void *);
+ void fw_convmp3(char *, void *);
+ void fw_addurl(char *, void *);
