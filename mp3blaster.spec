@@ -30,7 +30,7 @@ kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
 
 %build
 rm -f missing
-aclocal
+%{__aclocal}
 %{__autoconf}
 %{__automake}
 %configure \
