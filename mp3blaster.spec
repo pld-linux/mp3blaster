@@ -6,6 +6,7 @@ Release:	1
 License:	GPL
 Group:		Applications/Sound
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
+# Source0-md5:	38beb6a5648cbca4ec87ee14b0982283
 URL:		http://www.stack.nl/~brama/mp3blaster/
 BuildRequires:	autoconf
 BuildRequires:	automake
