@@ -11,9 +11,9 @@ Group(pl):	Aplikacje/D¼wiêk
 Group(pt_BR):	Aplicações/Som
 Source0:	ftp://mud.stack.nl/pub/mp3blaster/%{name}-%{version}.tar.gz
 URL:		http://www.stack.nl/~brama/mp3blaster/
-BuildRequires:	ncurses-devel >= 5.2
 BuildRequires:	autoconf
 BuildRequires:	automake
+BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
