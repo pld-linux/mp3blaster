@@ -1,0 +1,347 @@
+diff -urN mp3blaster-3.1.3.orig/src/Makefile.am mp3blaster-3.1.3/src/Makefile.am
+--- mp3blaster-3.1.3.orig/src/Makefile.am	Fri Sep 20 22:40:15 2002
++++ mp3blaster-3.1.3/src/Makefile.am	Sat May 31 21:00:22 2003
+@@ -37,6 +37,6 @@
+ mp3tag_LDADD = @LIBMPEGSOUND@ @LIBMYSQL@
+ mp3blaster_DEPENDENCIES = ../mpegsound/libmpegsound.a ../nmixer/libnmixer.a
+ INCLUDES		= -I$(top_srcdir)/mpegsound -I/usr/include/ncurses -I$(top_srcdir)/nmixer -I$(includedir)
+-mp3blaster_LDADD	= @LIBMPEGSOUND@ @LIBNMIXER@ @NAS_LIBS@ @SID_LIBS@ @OGG_LIBS@ @NCURSES_LIBS@
++mp3blaster_LDADD	= @LIBMPEGSOUND@ @LIBNMIXER@ @NAS_LIBS@ @SID_LIBS@ @OGG_LIBS@ @LIRC_LIBS@ @NCURSES_LIBS@
+ EXTRA_DIST = FILES
+ CXXFLAGS	= @CXXFLAGS@ @NAS_CFLAGS@ -DMP3BLASTER_DOCDIR=\"${pkgdatadir}\"
+diff -urN mp3blaster-3.1.3.orig/README.lirc mp3blaster-3.1.3/README.lirc
+--- mp3blaster-3.1.3.orig/README.lirc	Thu Jan  1 01:00:00 1970
++++ mp3blaster-3.1.3/README.lirc	Mon Jul 21 15:20:26 2003
+@@ -0,0 +1,68 @@
++LIRC support for mp3blaster
++
++Installing.
++	
++	Just use option --with-lirc in configure.
++
++
++Commands.
++
++	This commands are mostly equivalents of certin keys.
++
++PLAY - start playlist
++NEXT/PREVIOUS - next/previous song
++REWIND/FORWARD - rewind/forward current song 
++STOP - stop playlist, stop plaing single song
++UP/DOWN - move up/down in playlist/file window
++PLAYMODE - toggle play mode (like F8)
++ENTER - play single song
++FILES - switch to file window, and back
++SELECT - select playlist item/file
++QUIT - end program
++
++
++Examples.
++
++	Few lines from my .lircrc:
++
++begin
++  prog = mp3blaster
++  button = SLEEP
++  config = PREVIOUS
++end
++
++begin
++  prog = mp3blaster
++  button = SELECT
++  config = NEXT
++end
++
++begin
++  prog = mp3blaster
++  button = AB
++  config = REWIND
++end
++
++begin
++  prog = mp3blaster
++  button = PIC_MODE
++  config = FORWARD
++end
++
++begin
++    prog = mp3blaster
++    button = MUTE
++    config = QUIT
++    flags = mode
++end
++
++begin
++    prog = mp3blaster
++    button = 1-
++    config = SELECT
++    repeat = 2
++end
++
++and so on...
++
++Olgierd Pieczul <wojrus@linux.slupsk.net>
+diff -urN mp3blaster-3.1.3.orig/acconfig.h mp3blaster-3.1.3/acconfig.h
+--- mp3blaster-3.1.3.orig/acconfig.h	Fri Sep 20 22:30:47 2002
++++ mp3blaster-3.1.3/acconfig.h	Sat May 31 21:00:22 2003
+@@ -9,6 +9,9 @@
+ /* Include the OggVorbis sound format */
+ #undef INCLUDE_OGG
+ 
++/* Include LIRC support */
++#undef INCLUDE_LIRC
++
+ /* MySQL support for mp3tag. Probably only useful for the author :) */
+ #undef WANT_MYSQL
+ #undef MYSQL_H
+diff -urN mp3blaster-3.1.3.orig/configure.in mp3blaster-3.1.3/configure.in
+--- mp3blaster-3.1.3.orig/configure.in	Sun Oct 20 18:34:43 2002
++++ mp3blaster-3.1.3/configure.in	Mon Jul 21 15:05:53 2003
+@@ -79,6 +79,10 @@
+ AC_ARG_WITH(pth,
+   [  --with-pth              Experimental support for pth lib [default=no]],
+   [ if test "$withval" = "yes" ; then HAVE_PTH="yes" ; INCLUDEPTHREAD=0 ; fi ])
++HAVE_LIRC="no"
++AC_ARG_WITH(lirc,
++  [  --with-lirc             Support for LIRC [default=no]],
++  [ if test "$withval" = "yes"; then HAVE_LIRC="yes" ; fi ])
+ 
+ HAVE_OGG="yes"
+ AC_ARG_WITH(oggvorbis,
+@@ -140,6 +144,19 @@
+ 	fi
+ fi
+ 
++if test "$HAVE_LIRC" = "yes" && test "$HAVE_PTH" = "no"; then
++  AC_CHECK_LIB(lirc_client,lirc_init,HAVE_LIRC="yes",HAVE_LIRC="no",-llirc_client)
++   
++  if test "$HAVE_LIRC" = "yes" ; then
++    LIRC_LIBS="-llirc_client"
++		AC_SUBST(LIRC_LIBS)
++    AC_DEFINE(INCLUDE_LIRC)
++  fi
++else
++	HAVE_LIRC="no";
++fi
++
++
+ if test "$HAVE_OGG" = "yes" ; then
+   AC_CHECK_LIB(vorbisfile,main,HAVE_OGG="yes",HAVE_OGG="no",-lvorbis)
+   if test "$HAVE_OGG" = "yes" ; then
+@@ -353,6 +370,7 @@
+ Building summary:
+ static binaries    $HAVE_STATIC
+ ogg-vorbis         $HAVE_OGG
++lirc               $HAVE_LIRC
+ mysql mp3tag       $HAVE_MYSQL
+ libpth             $HAVE_PTH
+ pthreads or pth    $PTHREADS_OR_PTH
+diff -urN mp3blaster-3.1.3.orig/src/main.cc mp3blaster-3.1.3/src/main.cc
+--- mp3blaster-3.1.3.orig/src/main.cc	Sun Oct 20 16:19:08 2002
++++ mp3blaster-3.1.3/src/main.cc	Mon Jul 21 15:50:56 2003
+@@ -23,6 +23,12 @@
+  * Dec 31 2000: Applied a patch from Rob Funk to fix randomness bug
+  * Newer dates: changes made are stored in CVS.
+  */
++
++/*
++ * Added basic LIRC support.
++ * Olgierd Pieczul <wojrus@linux.slupsk.net>
++ */
++
+ #ifdef HAVE_CONFIG_H
+ #include <config.h>
+ #endif
+@@ -62,7 +68,9 @@
+ //load keybindings
+ #include "keybindings.h"
+ #include "getinput.h"
+-
++#ifdef INCLUDE_LIRC
++#include <lirc/lirc_client.h>
++#endif
+ #ifdef LIBPTH
+ #define USLEEP(x) pth_usleep(x)
+ #else
+@@ -190,7 +198,7 @@
+ void select_files_by_pattern(char *, void *);
+ void playlist_write(char *playlistfile, void *args);
+ void fw_rename_file(char *newname, void *args);
+-
++void *lirc_loop(void *);
+ #ifdef TEMPIE
+ #define LOCK_NCURSES (!pthread_mutex_trylock(&ncurses_mutex))
+ #define UPDATE_CURSES pthread_cond_signal(&ncurses_cond)
+@@ -268,6 +276,9 @@
+ #endif
+ pthread_t
+ 	thread_playlist; //thread that handles playlist (main handles input)
++#ifdef INCLUDE_LIRC
++	pthread_t thread_lirc;
++#endif
+ #ifdef TEMPIE
+ pthread_t
+ 	thread_ncurses; //thread that modifies ncurses structures
+@@ -281,6 +292,7 @@
+ 	playing_cond;
+ pth_t
+ 	thread_playlist;
++
+ #endif /* PTHREADEDMPEG */
+ mp3Win
+ 	*mp3_curwin = NULL, /* currently displayed mp3 window */
+@@ -316,7 +328,9 @@
+ 	*history = NULL;
+ getInput
+ 	*global_input = NULL;
+-
++#ifdef INCLUDE_LIRC
++	command_t lirc_cmd = CMD_NONE;
++#endif
+ int
+ main(int argc, char *argv[], char *envp[])
+ {
+@@ -346,7 +360,7 @@
+ #ifdef LIBPTH
+ 	pth_init();
+ #endif
+-
++	
+ 	tmp.sound_device = NULL;
+ 	tmp.mixer_device = NULL;
+ 	tmp.play_mode = NULL;
+@@ -729,6 +743,9 @@
+ 
+ #ifdef PTHREADEDMPEG
+ 	pthread_create(&thread_playlist, NULL, play_list, NULL);
++#ifdef INCLUDE_LIRC
++	pthread_create(&thread_lirc, NULL, lirc_loop, NULL);
++#endif
+ #ifdef TEMPIE
+ 	pthread_create(&thread_ncurses, NULL, curses_thread, NULL);
+ #endif
+@@ -742,7 +759,6 @@
+ 
+ 	thread_playlist = pth_spawn(PTH_ATTR_DEFAULT, play_list, NULL);
+ 	pth_yield(NULL);
+-
+ #endif /* PTHREADEDMPEG */
+ 
+ 	/* read input from keyboard */
+@@ -2301,6 +2317,51 @@
+ #endif
+ 	}
+ }
++#ifdef INCLUDE_LIRC
++void *lirc_loop(void *arg) {
++	if (arg);
++
++	struct lirc_config *config;
++	if (lirc_init("mp3blaster", 1) == -1) exit(1);
++	if (lirc_readconfig(NULL, &config, NULL) == 0) {
++		char *code;
++		char *name;
++		int ret;
++		while (lirc_nextcode(&code) == 0 && code) {
++			while ((ret = lirc_code2char(config, code, &name)) == 0 && name) {
++				if (!strcasecmp(name, "PLAY")) lirc_cmd = CMD_PLAY_PLAY; 	
++				else if (!strcasecmp(name, "NEXT")) lirc_cmd = CMD_PLAY_NEXT; 	
++				else if (!strcasecmp(name, "PREVIOUS")) lirc_cmd = CMD_PLAY_PREVIOUS;
++				else if (!strcasecmp(name, "REWIND")) lirc_cmd = CMD_PLAY_REWIND;
++				else if (!strcasecmp(name, "FORWARD")) lirc_cmd = CMD_PLAY_FORWARD;
++				else if (!strcasecmp(name, "STOP")) lirc_cmd = CMD_PLAY_STOP;
++				else if (!strcasecmp(name, "UP")) lirc_cmd = CMD_UP;
++				else if (!strcasecmp(name, "DOWN")) lirc_cmd = CMD_DOWN;
++				else if (!strcasecmp(name, "PLAYMODE")) lirc_cmd = CMD_TOGGLE_PLAYMODE;
++				else if (!strcasecmp(name, "ENTER")) {
++					if (progmode == PM_NORMAL) lirc_cmd = CMD_ENTER;
++					else if (progmode == PM_FILESELECTION) lirc_cmd = CMD_FILE_ENTER;
++				}
++				else if (!strcasecmp(name, "FILES")) {
++					if (progmode == PM_NORMAL) lirc_cmd = CMD_SELECT_FILES;
++					else if (progmode == PM_FILESELECTION) lirc_cmd = CMD_FILE_ADD_FILES;
++				}
++				else if (!strcasecmp(name, "SELECT")) {
++					if (progmode == PM_NORMAL) lirc_cmd = CMD_SELECT;
++					else if (progmode == PM_FILESELECTION) lirc_cmd = CMD_FILE_SELECT;
++				}
++				else if (!strcasecmp(name, "QUIT")) lirc_cmd = CMD_QUIT_PROGRAM;
++			}
++			free(code);
++			if (ret == -1) break;
++		}
++		lirc_freeconfig(config);
++	}
++	lirc_deinit();
++	return NULL;
++}
++
++#endif
+ 
+ void
+ update_playlist_history()
+@@ -3015,7 +3076,7 @@
+ handle_input(short no_delay)
+ {
+ 	int
+-		key,
++		key = 0,
+ 		retval = 0;
+ 	fd_set fdsr;
+ 	struct timeval tv;
+@@ -3035,21 +3096,35 @@
+ 		FD_ZERO(&fdsr);
+ 		FD_SET(0, &fdsr);  /* stdin file descriptor */
+ 		tv.tv_sec = tv.tv_usec = 0;
+-		if (select(FD_SETSIZE, &fdsr, NULL, NULL, &tv) == 1)
++#ifdef INCLUDE_LIRC
++		if (lirc_cmd == CMD_NONE) {
++			if (select(FD_SETSIZE, &fdsr, NULL, NULL, &tv) == 1) 
++				key = getch();
++			else
++			{
++				key = ERR;
++			}
++		}
++#else
++		if (select(FD_SETSIZE, &fdsr, NULL, NULL, &tv) == 1) 
+ 			key = getch();
+ 		else
+ 		{
+ 			key = ERR;
+ 		}
++#endif
+ 	}
+ 	else
+ 	{
+ 		debug("THREAD main waiting for blocking input.\n");
+ 		nodelay(stdscr, FALSE);
+-		key=getch();
++#ifdef INCLUDE_LIRC
++		if (lirc_cmd == CMD_NONE) key = getch();
++#else
++		key = getch();
++#endif 
+ 		debug("THREAD main woke up!\n");
+ 	}
+-
+ #ifndef TEMPIE
+ 	if (LOCK_NCURSES);
+ 
+@@ -3078,7 +3153,16 @@
+ 	//lock the ncurses mutex during the entire input loop.
+ 	LOCK_NCURSES;
+ #endif
++
++#ifdef INCLUDE_LIRC
++	if (lirc_cmd != CMD_NONE) {
++		cmd = lirc_cmd;
++		lirc_cmd = CMD_NONE;
++	}
++	else cmd = get_command(key, progmode);
++#else
+ 	cmd = get_command(key, progmode);
++#endif
+ 
+ 	if (input_mode == IM_SEARCH)
+ 	{
