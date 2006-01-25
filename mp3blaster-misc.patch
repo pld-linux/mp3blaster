@@ -1,0 +1,290 @@
+diff -urN mp3blaster-3.2.0/mpegsound/mpegtoraw.cc mp3blaster-3.2.0-chg/mpegsound/mpegtoraw.cc
+--- mp3blaster-3.2.0/mpegsound/mpegtoraw.cc	2003-09-09 22:49:50.000000000 +0200
++++ mp3blaster-3.2.0-chg/mpegsound/mpegtoraw.cc	2006-01-22 20:51:13.000000000 +0100
+@@ -1378,7 +1378,10 @@
+ 	threadflags.pause=threadflags.criticallock=false;
+ 
+ 	threadflags.thread=true;
+-	if(pthread_create(&thread,0,threadlinker,this))
++	pthread_attr_t threadattr;
++	pthread_attr_init(&threadattr);
++	pthread_attr_setdetachstate(&threadattr, PTHREAD_CREATE_DETACHED);
++	if(pthread_create(&thread,&threadattr,threadlinker,this))
+ 		seterrorcode(SOUND_ERROR_THREADFAIL);
+ 
+ 	return true;
+diff -urN mp3blaster-3.2.0/src/keybindings.h mp3blaster-3.2.0-chg/src/keybindings.h
+--- mp3blaster-3.2.0/src/keybindings.h	2002-09-20 22:40:15.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/keybindings.h	2006-01-22 20:51:12.000000000 +0100
+@@ -11,6 +11,7 @@
+ keybind_t keys[] = 
+ {
+ 	{ KEY_F(1), CMD_SELECT_FILES, PM_NORMAL, "Select Files" },
++	{ 9, CMD_QUEUE_ITEM, PM_NORMAL, "Queue item" },
+ 	{ KEY_F(2), CMD_ADD_GROUP, PM_NORMAL, "Add Group" },
+ 	{ KEY_F(5), CMD_SET_GROUP_TITLE, PM_NORMAL, "Set Group Title" },
+ 	{ KEY_F(3), CMD_LOAD_PLAYLIST, PM_NORMAL, "Load/Add Playlist" },
+diff -urN mp3blaster-3.2.0/src/main.cc mp3blaster-3.2.0-chg/src/main.cc
+--- mp3blaster-3.2.0/src/main.cc	2003-09-09 23:22:55.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/main.cc	2006-01-22 20:51:12.000000000 +0100
+@@ -45,6 +45,7 @@
+ #include <sys/time.h>
+ #include <signal.h>
+ #include <fnmatch.h>
++#include <regex.h>
+ #if defined(PTHREADEDMPEG) && defined(HAVE_PTHREAD_H)
+ #include <pthread.h>
+ #elif defined (LIBPTH) && defined(HAVE_PTH_H)
+@@ -147,6 +148,7 @@
+ void fw_search_next_char(char);
+ void fw_start_search(int timeout=2);
+ void fw_end_search();
++void fw_next_found();
+ void fw_delete();
+ void set_sound_device(const char *);
+ void set_mixer_device(const char *);
+@@ -312,7 +314,8 @@
+ 	nselfiles = 0,
+ 	current_song = -1,
+ 	nr_played_songs = 1,
+-	next_song = -1;
++	next_song = -1,
++	fw_current = -1;
+ short
+ 	popup = 0, /* 1 when a `popup' window is onscreen */
+ 	quit_after_playlist = 0;
+@@ -3237,6 +3240,8 @@
+ 			fw_end_search();	
+ 			input_mode = IM_DEFAULT;
+ 		}
++		else if (key == 9)
++			fw_next_found();
+ 		retval = 1;
+ 	}
+ 	else if (input_mode == IM_INPUT)
+@@ -3421,6 +3426,9 @@
+ 			unlock_playing_mutex();
+ 		}
+ 		break;
++		case CMD_QUEUE_ITEM:
++			sw->queueItem(sw->sw_selection);
++			break;
+ 		case CMD_NEXT_PAGE:
+ 			if (progmode == PM_NORMAL)
+ 				sw->pageDown();
+@@ -4021,7 +4029,7 @@
+ {
+ 	if (fw_searchstring)
+ 		delete[] fw_searchstring;
+-
++	fw_current = -1;
+ 	fw_searchstring = NULL;
+ 	signal(SIGALRM, SIG_IGN);
+ 	mw_settxt("");
+@@ -4041,6 +4049,33 @@
+ 	fw_end_search();
+ 	input_mode = IM_DEFAULT;
+ }
++void
++fw_next_found()
++{
++	short foundmatch = 0;
++	scrollWin *sw = file_window;
++	if (progmode == PM_NORMAL)
++		sw = mp3_curwin;
++	re_syntax_options|=RE_ICASE;
++	regex_t pattern;
++	if (regcomp(&pattern, fw_searchstring, REG_NOSUB|REG_ICASE)<0)
++		return;
++	for (int i = fw_current+1; i < sw->getNitems(); i++)
++	{
++		const char *item = sw->getItem(i);
++		if (progmode == PM_NORMAL)
++			item = chop_path(item);
++		if (regexec(&pattern, item, 0, NULL, REG_NOTBOL|REG_NOTEOL)== 0)
++		{
++			sw->setItem(i);
++			foundmatch = 1;
++			fw_current=i;
++			break;
++		}
++	}
++	fw_set_search_timeout(2);
++
++}
+ 
+ /* called when someone presses [a-zA-Z0-9] in searchmode in filemanager
+  * or in playlist
+@@ -4064,15 +4099,21 @@
+ 		tmp = new char[strlen(fw_searchstring)+2];
+ 		strcpy(tmp, fw_searchstring);
+ 		strncat(tmp, &nxt, 1);
++		tmp[strlen(fw_searchstring)+1]='\0';
+ 	}
++	re_syntax_options|=RE_ICASE;
++	regex_t pattern;
++	if (regcomp(&pattern, tmp, REG_NOSUB|REG_ICASE)<0)
++		return;
+ 	for (int i = 0; i < sw->getNitems(); i++)
+ 	{
+ 		const char *item = sw->getItem(i);
+ 		if (progmode == PM_NORMAL)
+ 			item = chop_path(item);
+-		if (!strncmp(item, tmp, strlen(tmp)))
++		if (regexec(&pattern, item, 0, NULL, REG_NOTBOL|REG_NOTEOL)== 0)
+ 		{
+ 			sw->setItem(i);
++			fw_current = i;
+ 			foundmatch = 1;
+ 			break;
+ 		}
+@@ -4298,8 +4339,18 @@
+ {
+ 	const char *mysong = NULL;
+ 	char *song;
++	if (mp3_rootwin->getQueueDepth() > 0)
++		{
++		mysong=mp3_rootwin->getQueuedSong();
++                if (mysong)
++		{
++			song = new char[strlen(mysong)+1];
++                	strcpy(song, mysong);
++	                return song;
++		}
++		}
+ 	int total_songs;
+-
++	
+ 	total_songs = mp3_rootwin->getUnplayedSongs();
+ 	if (!total_songs)
+ 		return NULL;
+Files mp3blaster-3.2.0/src/main.o and mp3blaster-3.2.0-chg/src/main.o differ
+Files mp3blaster-3.2.0/src/mp3blaster and mp3blaster-3.2.0-chg/src/mp3blaster differ
+diff -urN mp3blaster-3.2.0/src/mp3blaster.h mp3blaster-3.2.0-chg/src/mp3blaster.h
+--- mp3blaster-3.2.0/src/mp3blaster.h	2002-09-20 22:40:15.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/mp3blaster.h	2006-01-22 20:51:12.000000000 +0100
+@@ -51,7 +51,7 @@
+ 	CMD_CLEAR_PLAYLIST, CMD_DEL_MARK, CMD_FILE_TOGGLE_SORT,
+ 	CMD_FILE_DELETE, CMD_PLAY_SKIPEND, CMD_PLAY_NEXTGROUP, CMD_PLAY_PREVGROUP,
+ 	CMD_SELECT_ITEMS, CMD_DESELECT_ITEMS, CMD_FILE_RENAME, CMD_TOGGLE_DISPLAY,
+-	CMD_JUMP_TOP, CMD_JUMP_BOT, CMD_TOGGLE_WRAP, CMD_LEFT, CMD_RIGHT
++	CMD_JUMP_TOP, CMD_JUMP_BOT, CMD_TOGGLE_WRAP, CMD_LEFT, CMD_RIGHT, CMD_QUEUE_ITEM,
+ };
+ 
+ /* how to sort files in dirs ? */
+diff -urN mp3blaster-3.2.0/src/mp3item.cc mp3blaster-3.2.0-chg/src/mp3item.cc
+--- mp3blaster-3.2.0/src/mp3item.cc	2002-09-20 22:30:48.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/mp3item.cc	2006-01-22 20:51:12.000000000 +0100
+@@ -5,6 +5,7 @@
+ mp3Item::mp3Item() : winItem()
+ {
+ 	played = 0;
++	queue = -1;
+ }
+ 
+ mp3Item::~mp3Item()
+diff -urN mp3blaster-3.2.0/src/mp3item.h mp3blaster-3.2.0-chg/src/mp3item.h
+--- mp3blaster-3.2.0/src/mp3item.h	2002-09-20 22:30:48.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/mp3item.h	2006-01-22 20:51:12.000000000 +0100
+@@ -9,8 +9,12 @@
+ 	
+ 	void setPlayed() { played = 1; }
+ 	void setNotPlayed() { played = 0; }
++	void deQueue() { queue--; }
++	void setQueue(int qp) { queue=qp; }
++	short getQueue() { return queue; }
+ 	short isPlayed() { return played; }
+ 
+ private:
+ 	short played;
++	int queue;
+ };
+Files mp3blaster-3.2.0/src/mp3item.o and mp3blaster-3.2.0-chg/src/mp3item.o differ
+Files mp3blaster-3.2.0/src/mp3tag and mp3blaster-3.2.0-chg/src/mp3tag differ
+Files mp3blaster-3.2.0/src/mp3tag.o and mp3blaster-3.2.0-chg/src/mp3tag.o differ
+diff -urN mp3blaster-3.2.0/src/mp3win.cc mp3blaster-3.2.0-chg/src/mp3win.cc
+--- mp3blaster-3.2.0/src/mp3win.cc	2002-09-20 22:38:16.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/mp3win.cc	2006-01-22 20:51:12.000000000 +0100
+@@ -14,6 +14,7 @@
+ 	playmode = 0;
+ 	played = 0;
+ 	playing = 0;
++	queue_depth=0;
+ }
+ 
+ mp3Win::~mp3Win()
+@@ -148,6 +149,14 @@
+ 	return scrollWin::delItem(item_index, del);
+ }
+ 
++void 
++mp3Win::queueItem(int item_index)
++{
++	mp3Item * tmp=(mp3Item *)getWinItem(item_index);
++	tmp->setQueue(queue_depth);
++	queue_depth++;
++}
++	
+ short
+ mp3Win::isGroup(int index)
+ {
+@@ -325,6 +334,35 @@
+ 	return NULL;
+ }
+ 
++const char *
++mp3Win::getQueuedSong (short set_dequeued)
++{
++	mp3Item *tmp = (mp3Item*)getWinItem(0);
++	const char * retval = NULL;
++	int found=0;
++	while (tmp)
++	{
++		if (tmp->getType() != SUBWIN)
++		{
++			int cq = tmp->getQueue();
++			if (cq == 0)
++				retval = (const char *)tmp->getName();
++			if (cq >= 0)
++			{
++				found++;
++				if (set_dequeued)
++					tmp->deQueue();
++			}
++		}
++		tmp = (mp3Item*)tmp->next;
++	}
++	if (set_dequeued && queue_depth>0)
++		queue_depth--;
++	if (retval==NULL && found)
++		return getQueuedSong(set_dequeued);
++	return retval;
++}
++
+ /* set all songs in this group (and subgroups if recursive) to unplayed */
+ void
+ mp3Win::resetSongs(int recursive, short setplayed)
+diff -urN mp3blaster-3.2.0/src/mp3win.h mp3blaster-3.2.0-chg/src/mp3win.h
+--- mp3blaster-3.2.0/src/mp3win.h	2002-09-20 22:38:16.000000000 +0200
++++ mp3blaster-3.2.0-chg/src/mp3win.h	2006-01-22 20:51:12.000000000 +0100
+@@ -30,9 +30,12 @@
+ 	void setPlayed() { played = 1; }
+ 	void setPlaying() { playing = 1; }
+ 	void setNotPlaying() { playing = 0; }
++	short getQueueDepth() { return queue_depth; };
+ 	short isPlaying();
+ 	//unplayed index [0..unplayedSongs-1], set played
+ 	const char *getUnplayedSong(int, short set_played = 1, short recursive=1); 
++	const char *getQueuedSong(short set_dequeued = 1);
++	void queueItem(int);
+ 	mp3Win *getUnplayedGroup(int, short set_played = 1, short recursive=1);
+ 	int getUnplayedSongs(short recursive=1); //#of unplayed songs, including those in groups.
+ 	int getUnplayedGroups(short recursive=1);
+@@ -44,6 +47,7 @@
+ 	short playmode; //0: normal playmode, 1: shuffle playmode
+ 	short played; //1 if this group has been playing in group-mode
+ 	short playing; //1 if this group is currently being played in group-mode
++	short queue_depth;
+ };
+ 
+ #endif
