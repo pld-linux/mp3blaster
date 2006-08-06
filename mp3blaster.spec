@@ -5,19 +5,19 @@
 Summary:	ncurses-based based MP3 player
 Summary(pl):	Odtwarzacz plików MP3 bazowany na ncurses
 Name:		mp3blaster
-Version:	3.2.2
-Release:	0.1
+Version:	3.2.3
+Release:	1
 License:	GPL
 Group:		Applications/Sound
 Source0:	http://dl.sourceforge.net/mp3blaster/%{name}-%{version}.tar.gz
-# Source0-md5:	36408f3d7ac10db50e6c9df202adc071
-Patch0:		mp3blaster-misc.patch
+# Source0-md5:	0d892d7c99df175eb0efb2bc31086285
+Patch0:		%{name}-misc.patch
 URL:		http://mp3blaster.sourceforge.net/
 BuildRequires:	autoconf
 BuildRequires:	automake
 BuildRequires:	libvorbis-devel >= 1:1.0
-BuildRequires:	ncurses-devel >= 5.2
 %{?with_lirc:BuildRequires:	lirc-devel}
+BuildRequires:	ncurses-devel >= 5.2
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
 
 %description
