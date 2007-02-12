@@ -3,7 +3,7 @@
 %bcond_with	lirc	# with LIRC support.
 #
 Summary:	ncurses-based based MP3 player
-Summary(pl):	Odtwarzacz plików MP3 bazowany na ncurses
+Summary(pl.UTF-8):   Odtwarzacz plikÃ³w MP3 bazowany na ncurses
 Name:		mp3blaster
 Version:	3.2.3
 Release:	1
@@ -26,11 +26,11 @@ features of this player is the ability to divide a playlist into
 groups (albums). Therefore, the play order can be adjusted with great
 flexibility.
 
-%description -l pl
-mp3blaster to interaktywny odtwarzacz plików MP3 pracuj±cy w trybie
-tekstowym. Jedn± z wyj±tkowych cech tego odtwarzacza jest mo¿liwo¶æ
-dzielenia list odtwarzanych plików na grupy (albumy). Dziêki temu
-kolejno¶æ odtwarzania mo¿e byæ dobierana w bardzo elastyczny sposób.
+%description -l pl.UTF-8
+mp3blaster to interaktywny odtwarzacz plikÃ³w MP3 pracujÄ…cy w trybie
+tekstowym. JednÄ… z wyjÄ…tkowych cech tego odtwarzacza jest moÅ¼liwoÅ›Ä‡
+dzielenia list odtwarzanych plikÃ³w na grupy (albumy). DziÄ™ki temu
+kolejnoÅ›Ä‡ odtwarzania moÅ¼e byÄ‡ dobierana w bardzo elastyczny sposÃ³b.
 
 %prep
 %setup -q
