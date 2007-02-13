@@ -3,7 +3,7 @@
 %bcond_with	lirc	# with LIRC support.
 #
 Summary:	ncurses-based based MP3 player
-Summary(pl.UTF-8):   Odtwarzacz plików MP3 bazowany na ncurses
+Summary(pl.UTF-8):	Odtwarzacz plików MP3 bazowany na ncurses
 Name:		mp3blaster
 Version:	3.2.3
 Release:	1
