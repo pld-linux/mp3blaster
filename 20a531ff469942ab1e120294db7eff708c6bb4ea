@@ -1,0 +1,3 @@
+- some cosmetics,
+- fix: pass LDFLAGS="-s" instead LDFLAGS="-l" and pass this
+  variable to ./configure environment instead to make environment.
