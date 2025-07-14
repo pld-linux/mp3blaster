@@ -35,7 +35,7 @@ kolejność odtwarzania może być dobierana w bardzo elastyczny sposób.
 
 %prep
 %setup -q
-%patch0 -p1
+%patch -P0 -p1
 #%patch1 -p1  # check me!!!
 
 %build
